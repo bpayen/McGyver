@@ -14,7 +14,13 @@ class App:
 	def __init__(self):
 
 		self._running = True
-		self.maze = Maze()
+
+		self.MacGyver = MacGyver()
+
+		self.maze = Maze(self.MacGyver)
+
+		self.maze.display()
+
 
 	def  on_execute(self):
 
@@ -45,16 +51,27 @@ class App:
 					self.maze.movePlayerDirection("RIGHT")
 
 
-
-class McGyver:
+class MacGyver:
 
 	alive = True
 
 	objectList = []
 
-	def move(self,x,y):
+	photoPath = 'ressources/MacGyver.png'
+
+	def __init__(cls):
+
+	# def move(self,x,y):
 		pass
 
+	def getPhotoPath(cls):
+		return cls.photoPath
+
+	def addObjectToList(cls, objectName):
+		objectList.append(objectName)
+
+	def getObjectNumber(self):
+		return len(objectList)
 
 
 class Maze:
@@ -82,10 +99,10 @@ class Maze:
 
 	pd_maze = None
 
-	# coordonates of the entry point of (X / Y) maze plannar coordonate -> NOT in Matrice !
+	# coordonates of the entry point of (X / Y) maze plannar coordonate -> NOT Matrice Coordinate !
 	maze_start_point = [2,0]
 
-	# Free case for Objects positionning
+	# Floor case for Objects positionning
 	free_case = []
 
 	# List of Object positionning in the maze
@@ -94,17 +111,24 @@ class Maze:
 	# List of object's names
 	objects_list = ["Seringue", "tuyau","aiguille", "ether"]
 
-
 	# player position 
-	player_position = maze_start_point
+	player_position = None
 
 	# Gauradian position 
 	gardian_position = []
 
+	# Maze Backgroung, to restore picture part after player move
+	background_display_surf = None
 
-	def __init__(self):
 
-		self.pd_maze  = pd.DataFrame(self.maze)
+	def __init__(self, mcGyver):
+
+		self.pd_maze = pd.DataFrame(self.maze)
+
+		self.player_position = self.maze_start_point
+
+		self.McGyver = mcGyver
+
 		# print(self.pd_maze)
 
 		# print(self.pd_maze.iloc[0, 0:])
@@ -112,7 +136,7 @@ class Maze:
 		# print(self.pd_maze.iloc[2])
 
 
-		#print( pd_maze.iloc[0, 1])
+		# print( pd_maze.iloc[0, 1] )
 		# initialize Objects spreading in the Maze
 		# Constraintes : every "floor" case must be recheable
 		# from the main path .... 
@@ -120,13 +144,11 @@ class Maze:
 		# Initialize Maze
 
 		# Display Maze on screen
-
-		pass
 	
 	# return object's name at the position
 	# or retrun empty string
-	def getObjectAt(cls, x, y):
-		index = cls.objects_positions.index([x,y]) 
+	def getObjectAt(cls, x_y):
+		index = cls.objects_positions.index() 
 		if index >= 0:
 			return cls.objects_list[index]
 		else:
@@ -146,7 +168,12 @@ class Maze:
 		# create graphics elements
 		pygame.display.init()
 
+		# Surafce de travail
 		cls.display_surf = pygame.display.set_mode((cls.windowWidth,cls.windowHeight))
+		
+		# Surface Background de sauvegarde, pour les restaurations
+		# après mouvement du player
+		cls.background_display_surf = pygame.Surface((cls.windowWidth,cls.windowHeight))
 
 		cls.image_pavement = pygame.image.load('ressources/floor-tiles-20x20.png').convert()
 
@@ -155,21 +182,23 @@ class Maze:
 			for col in range(len(cls.maze[li])):
 				if cls.maze[li][col] :
 					# Wall
-					cls.display_surf.blit(cls.image_pavement, (col * 20, li * 20),  position_wall )
+					cls.background_display_surf.blit(cls.image_pavement, (col * 20, li * 20),  position_wall )
 
 				elif not cls.maze[li][col] :
 					# Floor
-					cls.display_surf.blit(cls.image_pavement, (col * 20, li * 20),  position_floor )
+					cls.background_display_surf.blit(cls.image_pavement, (col * 20, li * 20),  position_floor )
 
 					# Appends the free case to le list of avelable cases for objects
 					cls.free_case.append([col,li])
 
+		
+		cls.display_surf.blit(cls.background_display_surf, (0,0))
 
-		# place objecys in Maze
+		# get randoms objects list
 		cls.objects_positions = random.sample(cls.free_case, k=len(cls.objects_list))
 
 		# display objects on the screen...
-		iol.append( pygame.transform.scale(pygame.image.load('ressources/aiguille.png').convert_alpha(), (20,20)))
+		iol.append(pygame.transform.scale(pygame.image.load('ressources/aiguille.png').convert(), (20,20)))
 		iol.append(pygame.transform.scale(pygame.image.load('ressources/ether.png').convert_alpha(), (20,20)))
 		iol.append(pygame.transform.scale(pygame.image.load('ressources/seringue.png').convert_alpha(), (20,20)))
 		iol.append(pygame.transform.scale(pygame.image.load('ressources/tube_plastique.png').convert_alpha(), (20,20)))
@@ -177,16 +206,25 @@ class Maze:
 		for x in range(0,4):
 			cls.display_surf.blit(iol[x], (cls.objects_positions[x][0] * 20 , cls.objects_positions[x][1] * 20  ) )
 
+		# Display McGyver in le Lab, with right size image
+		cls.photoPath = cls.McGyver.getPhotoPath()
+		cls.PlayerPicture = pygame.transform.scale( pygame.image.load( cls.photoPath  ).convert_alpha(), (20,20))
+		cls.display_surf.blit( cls.PlayerPicture , (cls.player_position[0] * 20 , cls.player_position[1] * 20  ) ) 
+		
 		pygame.display.update()
+
+	def restoreBackground(cls):
+		cls.display_surf.blit( cls.background_display_surf, (0,0) )
+		pygame.display.update()
+
 
 	# return TRUE if the posotion is not Wall
 	def isXYPositionPossible(cls,x,y):
 		# use of NOT as a wall is "1" and "floor" is "0"...the opisite 
 		# af the question ...
-		print("X :" + str(x) + " Y:" + str(y), end=" ")
-		print(cls.pd_maze.iloc[ y , x ])
-		print(cls.pd_maze.iloc[ y , 0: ] )
-
+		print("X :" + str(x) + " Y:" + str(y), end=" ") # DEBUG
+		print(cls.pd_maze.iloc[ y , x ])  # DEBUG
+		print(cls.pd_maze.iloc[ y , 0: ] ) # DEBUG
 
 		if ( y < 0 ) :
 			return False
@@ -200,6 +238,8 @@ class Maze:
 		if ( cls.pd_maze.iloc[ y , x ] == 1 ):
 			return False
 
+
+
 	# return TRUE if the guardian is at the position
 	def isXYPositionIsGuardian(cls,x,y):	
 		#return cls.gardian_position[x][y]
@@ -208,41 +248,40 @@ class Maze:
 	# Moves Player in the Maze
 	def movePlayerDirection(cls, direction):
 
-		# print("Direction =" + direction )
-		# print(cls.player_position)
-		# print(cls.isPositionFree( cls.player_position[0] , cls.player_position[1] + 1 ))
-
 		if direction == "UP" :
 			if cls.isXYPositionPossible( cls.player_position[0], cls.player_position[1] - 1) :
 				cls.player_position = [ cls.player_position[0], cls.player_position[1] - 1]
-				print("Move UP", end=" ")
-				print(cls.player_position)
+				#getObjectAt(cls.player_position)
+				print("Move UP", end=" ") # DEBUG
+				print(cls.player_position) # DEBUG
 
 		if direction == "DOWN" :
 			if cls.isXYPositionPossible( cls.player_position[0], cls.player_position[1] + 1) :
 				cls.player_position = [ cls.player_position[0], cls.player_position[1] + 1]
-				print("Move DOWN", end=" ")
-				print(cls.player_position)
+				print("Move DOWN", end=" ") # DEBUG
+				print(cls.player_position) # DEBUG
 
 		if direction == "RIGHT" :
 			if cls.isXYPositionPossible( cls.player_position[0] + 1, cls.player_position[1]) :
 				cls.player_position = [ cls.player_position[0] + 1, cls.player_position[1] ]
-				print("Move RIGHT", end=" ")
-				print(cls.player_position)
+				print("Move RIGHT", end=" ") # DEBUG
+				print(cls.player_position) # DEBUG
 
 		if direction == "LEFT" :
 			if cls.isXYPositionPossible( cls.player_position[0] - 1, cls.player_position[1]) :
 				cls.player_position = [ cls.player_position[0] - 1, cls.player_position[1] ]
-				print("Move LEFT", end=" ")
-				print(cls.player_position)
+				print("Move LEFT", end=" ") # DEBUG
+				print(cls.player_position) # DEBUG
+
 	
 
 def main():
-	maze = Maze()
-	maze.display()
+	# maze = Maze()
+	# maze.display()
 
 	app = App()
 	app.on_execute()
+
 
 
 if __name__ == "__main__":
