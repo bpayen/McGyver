@@ -15,9 +15,11 @@ class App:
 
 		self._running = True
 
-		self.MacGyver = MacGyver()
+		self.MacGyver = MacGyver('ressources/MacGyver.png')
 
-		self.maze = Maze(self.MacGyver)
+		self.guardian = MacGyver('ressources/Gardien.png')
+
+		self.maze = Maze(self.MacGyver, self.guardian)
 
 		self.maze.display()
 
@@ -35,43 +37,55 @@ class App:
 					pygame.quit()
 
 				if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
-					print("UP")
 					self.maze.movePlayerDirection("UP")
 
 				if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-					print("DOWN")
 					self.maze.movePlayerDirection("DOWN")
 
 				if event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-					print("LEFT")
 					self.maze.movePlayerDirection("LEFT")
 
 				if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-					print("RIGHT")
 					self.maze.movePlayerDirection("RIGHT")
 
+class Personnage:
 
-class MacGyver:
+	position = None
+
+	photoPath = None
+
+	def __init__(cls, photoPath ):
+		cls.photoPath = photoPath
+
+	def getPhotoPath(cls):
+		return cls.photoPath
+
+
+class MacGyver(Personnage):
 
 	alive = True
 
 	objectList = []
 
-	photoPath = 'ressources/MacGyver.png'
+	#photoPath = 'ressources/MacGyver.png'
 
-	def __init__(cls):
-
-	# def move(self,x,y):
-		pass
-
-	def getPhotoPath(cls):
-		return cls.photoPath
+	def __init__(cls, photoPath):
+		super().__init__( photoPath )
 
 	def addObjectToList(cls, objectName):
-		objectList.append(objectName)
+		if (  objectName is not None and objectName != "") :
+			cls.objectList.append(objectName)
 
 	def getObjectNumber(self):
 		return len(objectList)
+
+
+class Guardian(Personnage):
+
+	#photoPath = 'ressources/MacGyver.png'
+
+	def __init__(cls, photoPath):
+		super().__init__(photoPath)
 
 
 class Maze:
@@ -80,8 +94,9 @@ class Maze:
 	windowWidth = 15 * 20 
 	windowHeight = 15 * 20
 
-	# Maze charte
-	maze = [[1,1,0,1,1,1,1,1,1,1,1,1,1,1,1],
+	# Maze scheme
+	maze = [
+			[1,1,0,1,1,1,1,1,1,1,1,1,1,1,1],
 			[1,1,0,1,0,0,0,1,1,1,1,1,0,0,1],
 			[1,1,0,0,0,1,1,0,0,0,0,0,0,1,1],
 			[1,1,1,1,0,0,0,0,1,0,1,1,1,1,1],
@@ -95,12 +110,15 @@ class Maze:
 			[1,1,0,1,0,0,1,0,1,1,0,1,0,0,1],
 			[1,0,0,1,1,0,1,0,0,1,0,0,0,1,1],
 			[1,0,1,1,0,0,1,1,0,1,1,1,0,1,1],
-			[1,1,1,1,1,1,1,1,1,1,1,1,0,1,1]]
+			[1,1,1,1,1,1,1,1,1,1,1,1,0,1,1]
+			]
 
+	# Maze in Pandas (cartesian...) coordinates... 
 	pd_maze = None
 
-	# coordonates of the entry point of (X / Y) maze plannar coordonate -> NOT Matrice Coordinate !
+	# coordinates of the entry/ending point of (X / Y) maze plannar coordinates -> NOT Matrice Coordinates !
 	maze_start_point = [2,0]
+	maze_end_point = [12,14]
 
 	# Floor case for Objects positionning
 	free_case = []
@@ -109,34 +127,46 @@ class Maze:
 	objects_positions = []
 
 	# List of object's names
-	objects_list = ["Seringue", "tuyau","aiguille", "ether"]
+	available_objects_list = ["Seringue", "tuyau","aiguille", "ether"]
+
+	# player .... him-self
+	player = None
 
 	# player position 
 	player_position = None
 
-	# Gauradian position 
+	# player picture
+	player_picture = None
+
+	# guardina .... him-self
+	guardian = None
+
+	# guardian position 
+	guardian_picture = None
+
+	# Guaradian position 
 	gardian_position = []
 
 	# Maze Backgroung, to restore picture part after player move
 	background_display_surf = None
 
 
-	def __init__(self, mcGyver):
+	def __init__(self, player, guardian ):
 
+		# Construct Pandas structure (easier to use with cartesian coordinates...)
 		self.pd_maze = pd.DataFrame(self.maze)
 
+		# Player ....
+		self.player = player
 		self.player_position = self.maze_start_point
 
-		self.McGyver = mcGyver
+		# Guardian ....
+		self.guardian = guardian
+		self.guardian_position = self.maze_end_point
 
-		# print(self.pd_maze)
+		# Load the Maze's scheme...
+		#self.maze = self.loadMazeScheme()
 
-		# print(self.pd_maze.iloc[0, 0:])
-		# print(self.pd_maze.iloc[1])
-		# print(self.pd_maze.iloc[2])
-
-
-		# print( pd_maze.iloc[0, 1] )
 		# initialize Objects spreading in the Maze
 		# Constraintes : every "floor" case must be recheable
 		# from the main path .... 
@@ -145,13 +175,41 @@ class Maze:
 
 		# Display Maze on screen
 	
+	# Load Maze structure definition file
+	def loadMazeScheme(self):
+		 
+		return [
+			[1,1,0,1,1,1,1,1,1,1,1,1,1,1,1],
+			[1,1,0,1,0,0,0,1,1,1,1,1,0,0,1],
+			[1,1,0,0,0,1,1,0,0,0,0,0,0,1,1],
+			[1,1,1,1,0,0,0,0,1,0,1,1,1,1,1],
+			[1,0,0,1,0,1,1,1,1,0,0,0,0,1,1],
+			[1,1,0,1,0,1,1,1,1,1,1,1,0,1,1],
+			[1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+			[1,0,1,1,1,1,1,0,1,0,1,0,0,0,1],
+			[1,0,0,0,0,1,1,0,1,1,1,1,0,1,1],
+			[1,1,1,1,0,1,1,0,0,0,0,1,0,0,1],
+			[1,0,0,0,0,1,1,0,1,1,0,1,0,1,1],
+			[1,1,0,1,0,0,1,0,1,1,0,1,0,0,1],
+			[1,0,0,1,1,0,1,0,0,1,0,0,0,1,1],
+			[1,0,1,1,0,0,1,1,0,1,1,1,0,1,1],
+			[1,1,1,1,1,1,1,1,1,1,1,1,0,1,1]
+			]
+
+
 	# return object's name at the position
 	# or retrun empty string
-	def getObjectAt(cls, x_y):
-		index = cls.objects_positions.index() 
-		if index >= 0:
-			return cls.objects_list[index]
-		else:
+	def getObjectAt(cls, x_y): 
+		try:
+			index = cls.objects_positions.index( x_y ) 
+			# OK.... there is an object at position....
+			# Remove it from le liste before returning it 
+			# to caller...
+			cls.objects_positions.remove( x_y ) 
+			object_to_return = cls.available_objects_list[index]
+			del cls.available_objects_list[index]
+			return object_to_return
+		except ValueError:
 			return ""
 
 	# Display the Maze and the objects...
@@ -195,7 +253,17 @@ class Maze:
 		cls.display_surf.blit(cls.background_display_surf, (0,0))
 
 		# get randoms objects list
-		cls.objects_positions = random.sample(cls.free_case, k=len(cls.objects_list))
+		try:
+			cls.free_case.remove( cls.maze_start_point ) # No object on Maze's starting point 
+		except:
+			pass
+
+		try:
+			cls.free_case.remove( cls.maze_end_point ) # No object on Maze's ending point 
+		except:
+			pass
+
+		cls.objects_positions = random.sample(cls.free_case, k=len(cls.available_objects_list))
 
 		# display objects on the screen...
 		iol.append(pygame.transform.scale(pygame.image.load('ressources/aiguille.png').convert(), (20,20)))
@@ -207,29 +275,34 @@ class Maze:
 			cls.display_surf.blit(iol[x], (cls.objects_positions[x][0] * 20 , cls.objects_positions[x][1] * 20  ) )
 
 		# Display McGyver in le Lab, with right size image
-		cls.photoPath = cls.McGyver.getPhotoPath()
-		cls.PlayerPicture = pygame.transform.scale( pygame.image.load( cls.photoPath  ).convert_alpha(), (20,20))
-		cls.display_surf.blit( cls.PlayerPicture , (cls.player_position[0] * 20 , cls.player_position[1] * 20  ) ) 
+		cls.player_photo_path = cls.player.getPhotoPath()
+		cls.player_picture = pygame.transform.scale( pygame.image.load( cls.player_photo_path  ).convert_alpha(), (20,20) )
+		cls.display_surf.blit( cls.player_picture , ( cls.player_position[0] * 20 , cls.player_position[1] * 20  ) ) 
+
+
+		# Display Guardian in le Lab, with right size image
+		cls.guardian_photoPath = cls.guardian.getPhotoPath()
+		cls.guardian_picture = pygame.transform.scale( pygame.image.load( cls.guardian_photoPath  ).convert_alpha(), (20,20) )
+		cls.display_surf.blit( cls.guardian_picture , ( cls.guardian_position[0] * 20 , cls.guardian_position[1] * 20  ) ) 
 		
 		pygame.display.update()
 
-	def restoreBackground(cls):
-		cls.display_surf.blit( cls.background_display_surf, (0,0) )
-		pygame.display.update()
-
+	# Restore the background picture from the saved one
+	def restoreBackground(cls, coordinates, sizeX = 20, sizeY = 20 ):
+		rect = ( ( coordinates[0] * sizeX, coordinates[1] * sizeY ) , (sizeX ,sizeY ) ) 
+		cls.display_surf.fill((0,0,0), rect )
+		cls.display_surf.blit( cls.background_display_surf,  ( coordinates[0] * sizeX, coordinates[1] * sizeY ), rect )
+		pygame.display.update( rect )
 
 	# return TRUE if the posotion is not Wall
-	def isXYPositionPossible(cls,x,y):
+	def isXYPositionPossible(cls, x, y ):
 		# use of NOT as a wall is "1" and "floor" is "0"...the opisite 
 		# af the question ...
-		print("X :" + str(x) + " Y:" + str(y), end=" ") # DEBUG
-		print(cls.pd_maze.iloc[ y , x ])  # DEBUG
-		print(cls.pd_maze.iloc[ y , 0: ] ) # DEBUG
 
-		if ( y < 0 ) :
+		if ( x < 0 or y < 0 ) :
 			return False
 
-		if ( y > len(Maze.maze) ) :
+		if ( x >= len( Maze.maze[0] ) or y >= len(Maze.maze) ) :
 			return False
 
 		if ( cls.pd_maze.iloc[ y , x ] == 0 ):
@@ -249,35 +322,44 @@ class Maze:
 	def movePlayerDirection(cls, direction):
 
 		if direction == "UP" :
-			if cls.isXYPositionPossible( cls.player_position[0], cls.player_position[1] - 1) :
-				cls.player_position = [ cls.player_position[0], cls.player_position[1] - 1]
-				#getObjectAt(cls.player_position)
-				print("Move UP", end=" ") # DEBUG
-				print(cls.player_position) # DEBUG
+			if cls.isXYPositionPossible( cls.player_position[0], cls.player_position[1] - 1 ) :
+				cls.restoreBackground( cls.player_position )
+				cls.player_position = [ cls.player_position[0], cls.player_position[1] - 1 ]
+				cls.player.addObjectToList( cls.getObjectAt( cls.player_position ) )
+				cls.displayPlayer( cls.player_position )
 
 		if direction == "DOWN" :
-			if cls.isXYPositionPossible( cls.player_position[0], cls.player_position[1] + 1) :
-				cls.player_position = [ cls.player_position[0], cls.player_position[1] + 1]
-				print("Move DOWN", end=" ") # DEBUG
-				print(cls.player_position) # DEBUG
+			if cls.isXYPositionPossible( cls.player_position[0], cls.player_position[1] + 1 ) :
+				cls.restoreBackground( cls.player_position )
+				cls.player_position = [ cls.player_position[0], cls.player_position[1] + 1 ]
+				cls.player.addObjectToList( cls.getObjectAt( cls.player_position ) )
+				cls.displayPlayer( cls.player_position )
 
 		if direction == "RIGHT" :
-			if cls.isXYPositionPossible( cls.player_position[0] + 1, cls.player_position[1]) :
+			if cls.isXYPositionPossible( cls.player_position[0] + 1, cls.player_position[1] ) :
+				cls.restoreBackground( cls.player_position )
 				cls.player_position = [ cls.player_position[0] + 1, cls.player_position[1] ]
-				print("Move RIGHT", end=" ") # DEBUG
-				print(cls.player_position) # DEBUG
+				cls.player.addObjectToList( cls.getObjectAt( cls.player_position ) )
+				cls.displayPlayer( cls.player_position )
 
 		if direction == "LEFT" :
-			if cls.isXYPositionPossible( cls.player_position[0] - 1, cls.player_position[1]) :
+			if cls.isXYPositionPossible( cls.player_position[0] - 1, cls.player_position[1] ) :
+				cls.restoreBackground( cls.player_position )
 				cls.player_position = [ cls.player_position[0] - 1, cls.player_position[1] ]
-				print("Move LEFT", end=" ") # DEBUG
-				print(cls.player_position) # DEBUG
+				cls.player.addObjectToList( cls.getObjectAt( cls.player_position ) )
+				cls.displayPlayer( cls.player_position )
 
-	
+	# Display the player at the right place on the Maze....
+	def displayPlayer(cls, coordinates, sizeX = 20, sizeY = 20 ):
+
+		rect = ( ( coordinates[0] * sizeX, coordinates[1] * sizeY ) , ( sizeX ,sizeY ) ) 
+
+		cls.display_surf.blit( cls.player_picture , ( coordinates[0] * 20 , coordinates[1] * 20 ) ) 
+
+		pygame.display.update( rect )
+
 
 def main():
-	# maze = Maze()
-	# maze.display()
 
 	app = App()
 	app.on_execute()
