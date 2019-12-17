@@ -17,7 +17,7 @@ class App:
 
 		self.MacGyver = MacGyver('ressources/MacGyver.png')
 
-		self.guardian = MacGyver('ressources/Gardien.png')
+		self.guardian = Guardian('ressources/Gardien.png')
 
 		self.maze = Maze(self.MacGyver, self.guardian)
 
@@ -77,7 +77,10 @@ class MacGyver(Personnage):
 			cls.objectList.append(objectName)
 
 	def getObjectNumber(self):
-		return len(objectList)
+		return len(self.objectList)
+
+	def killMacGyver(cls):
+		alive = False
 
 
 class Guardian(Personnage):
@@ -127,7 +130,10 @@ class Maze:
 	objects_positions = []
 
 	# List of object's names
-	available_objects_list = ["Seringue", "tuyau","aiguille", "ether"]
+	number_of_initial_objects_list = 0
+
+	# List of object's names
+	available_objects_list = ["Seringue", "tuyau","aiguille", "ether"] 
 
 	# player .... him-self
 	player = None
@@ -163,6 +169,10 @@ class Maze:
 		# Guardian ....
 		self.guardian = guardian
 		self.guardian_position = self.maze_end_point
+
+		self.number_of_initial_objects_list = len ( self.available_objects_list )
+
+		print(self.guardian_position) # DEBUG
 
 		# Load the Maze's scheme...
 		#self.maze = self.loadMazeScheme()
@@ -294,7 +304,7 @@ class Maze:
 		cls.display_surf.blit( cls.background_display_surf,  ( coordinates[0] * sizeX, coordinates[1] * sizeY ), rect )
 		pygame.display.update( rect )
 
-	# return TRUE if the posotion is not Wall
+	# return TRUE if the position is not Wall
 	def isXYPositionPossible(cls, x, y ):
 		# use of NOT as a wall is "1" and "floor" is "0"...the opisite 
 		# af the question ...
@@ -312,11 +322,27 @@ class Maze:
 			return False
 
 
-
 	# return TRUE if the guardian is at the position
-	def isXYPositionIsGuardian(cls,x,y):	
-		#return cls.gardian_position[x][y]
-		pass
+	def isXYPositionIsGuardian(cls,XY):	
+		if ( cls.guardian_position == XY ): 
+			return True
+		else:
+			return False
+
+	# return TRUE if Player win against Guardian
+	def isPlayerWinOverGuardian(cls,XY):	
+
+		print( cls.player.getObjectNumber(), end=" ")
+		print( cls.number_of_initial_objects_list) 
+
+		if cls.isXYPositionIsGuardian(XY):
+			if ( cls.player.getObjectNumber() ==  cls.number_of_initial_objects_list ) :
+				print("MacGyver gagne") # DEBUG
+				return True
+			else:
+				cls.player.killMacGyver()
+				print("Mort de MacGyver") # DEBUG
+				return False
 
 	# Moves Player in the Maze
 	def movePlayerDirection(cls, direction):
@@ -325,6 +351,7 @@ class Maze:
 			if cls.isXYPositionPossible( cls.player_position[0], cls.player_position[1] - 1 ) :
 				cls.restoreBackground( cls.player_position )
 				cls.player_position = [ cls.player_position[0], cls.player_position[1] - 1 ]
+				cls.isPlayerWinOverGuardian(cls.player_position)
 				cls.player.addObjectToList( cls.getObjectAt( cls.player_position ) )
 				cls.displayPlayer( cls.player_position )
 
@@ -332,6 +359,7 @@ class Maze:
 			if cls.isXYPositionPossible( cls.player_position[0], cls.player_position[1] + 1 ) :
 				cls.restoreBackground( cls.player_position )
 				cls.player_position = [ cls.player_position[0], cls.player_position[1] + 1 ]
+				cls.isPlayerWinOverGuardian(cls.player_position)
 				cls.player.addObjectToList( cls.getObjectAt( cls.player_position ) )
 				cls.displayPlayer( cls.player_position )
 
@@ -339,6 +367,7 @@ class Maze:
 			if cls.isXYPositionPossible( cls.player_position[0] + 1, cls.player_position[1] ) :
 				cls.restoreBackground( cls.player_position )
 				cls.player_position = [ cls.player_position[0] + 1, cls.player_position[1] ]
+				cls.isPlayerWinOverGuardian(cls.player_position)
 				cls.player.addObjectToList( cls.getObjectAt( cls.player_position ) )
 				cls.displayPlayer( cls.player_position )
 
@@ -346,6 +375,7 @@ class Maze:
 			if cls.isXYPositionPossible( cls.player_position[0] - 1, cls.player_position[1] ) :
 				cls.restoreBackground( cls.player_position )
 				cls.player_position = [ cls.player_position[0] - 1, cls.player_position[1] ]
+				cls.isPlayerWinOverGuardian(cls.player_position)
 				cls.player.addObjectToList( cls.getObjectAt( cls.player_position ) )
 				cls.displayPlayer( cls.player_position )
 
