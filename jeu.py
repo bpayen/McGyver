@@ -6,6 +6,8 @@ import pygame
 import sys
 import random
 import pandas as pd
+import json
+
 
 class App:
 
@@ -32,7 +34,7 @@ class App:
 			keys = pygame.key.get_pressed()
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-					#print("DDDDD")
+					#print("DDDDD") # DEBUG
 					self._running = False
 					pygame.quit()
 
@@ -98,8 +100,9 @@ class Maze:
 	windowHeight = 15 * 20
 
 	# Maze scheme
+	#maze = None
 	maze = [
-			[1,1,0,1,1,1,1,1,1,1,1,1,1,1,1],
+			[1,1,'S',1,1,1,1,1,1,1,1,1,1,1,1],
 			[1,1,0,1,0,0,0,1,1,1,1,1,0,0,1],
 			[1,1,0,0,0,1,1,0,0,0,0,0,0,1,1],
 			[1,1,1,1,0,0,0,0,1,0,1,1,1,1,1],
@@ -113,15 +116,17 @@ class Maze:
 			[1,1,0,1,0,0,1,0,1,1,0,1,0,0,1],
 			[1,0,0,1,1,0,1,0,0,1,0,0,0,1,1],
 			[1,0,1,1,0,0,1,1,0,1,1,1,0,1,1],
-			[1,1,1,1,1,1,1,1,1,1,1,1,0,1,1]
+			[1,1,1,1,1,1,1,1,1,1,1,1,'E',1,1]
 			]
 
 	# Maze in Pandas (cartesian...) coordinates... 
 	pd_maze = None
 
 	# coordinates of the entry/ending point of (X / Y) maze plannar coordinates -> NOT Matrice Coordinates !
-	maze_start_point = [2,0]
-	maze_end_point = [12,14]
+	# maze_start_point = [2,0]
+	# maze_end_point = [12,14]
+	maze_start_point = []
+	maze_end_point = []
 
 	# Floor case for Objects positionning
 	free_case = []
@@ -151,7 +156,7 @@ class Maze:
 	guardian_picture = None
 
 	# Guaradian position 
-	gardian_position = []
+	guardian_position = []
 
 	# Maze Backgroung, to restore picture part after player move
 	background_display_surf = None
@@ -164,15 +169,15 @@ class Maze:
 
 		# Player ....
 		self.player = player
-		self.player_position = self.maze_start_point
+		#self.player_position = self.maze_start_point
 
 		# Guardian ....
 		self.guardian = guardian
-		self.guardian_position = self.maze_end_point
+		#self.guardian_position = self.maze_end_point
 
 		self.number_of_initial_objects_list = len ( self.available_objects_list )
 
-		print(self.guardian_position) # DEBUG
+		#print(self.guardian_position) # DEBUG
 
 		# Load the Maze's scheme...
 		#self.maze = self.loadMazeScheme()
@@ -188,24 +193,24 @@ class Maze:
 	# Load Maze structure definition file
 	def loadMazeScheme(self):
 		 
-		return [
-			[1,1,0,1,1,1,1,1,1,1,1,1,1,1,1],
-			[1,1,0,1,0,0,0,1,1,1,1,1,0,0,1],
-			[1,1,0,0,0,1,1,0,0,0,0,0,0,1,1],
-			[1,1,1,1,0,0,0,0,1,0,1,1,1,1,1],
-			[1,0,0,1,0,1,1,1,1,0,0,0,0,1,1],
-			[1,1,0,1,0,1,1,1,1,1,1,1,0,1,1],
-			[1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
-			[1,0,1,1,1,1,1,0,1,0,1,0,0,0,1],
-			[1,0,0,0,0,1,1,0,1,1,1,1,0,1,1],
-			[1,1,1,1,0,1,1,0,0,0,0,1,0,0,1],
-			[1,0,0,0,0,1,1,0,1,1,0,1,0,1,1],
-			[1,1,0,1,0,0,1,0,1,1,0,1,0,0,1],
-			[1,0,0,1,1,0,1,0,0,1,0,0,0,1,1],
-			[1,0,1,1,0,0,1,1,0,1,1,1,0,1,1],
-			[1,1,1,1,1,1,1,1,1,1,1,1,0,1,1]
-			]
-
+		# return [
+		# 	[1,1,0,1,1,1,1,1,1,1,1,1,1,1,1],
+		# 	[1,1,0,1,0,0,0,1,1,1,1,1,0,0,1],
+		# 	[1,1,0,0,0,1,1,0,0,0,0,0,0,1,1],
+		# 	[1,1,1,1,0,0,0,0,1,0,1,1,1,1,1],
+		# 	[1,0,0,1,0,1,1,1,1,0,0,0,0,1,1],
+		# 	[1,1,0,1,0,1,1,1,1,1,1,1,0,1,1],
+		# 	[1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+		# 	[1,0,1,1,1,1,1,0,1,0,1,0,0,0,1],
+		# 	[1,0,0,0,0,1,1,0,1,1,1,1,0,1,1],
+		# 	[1,1,1,1,0,1,1,0,0,0,0,1,0,0,1],
+		# 	[1,0,0,0,0,1,1,0,1,1,0,1,0,1,1],
+		# 	[1,1,0,1,0,0,1,0,1,1,0,1,0,0,1],
+		# 	[1,0,0,1,1,0,1,0,0,1,0,0,0,1,1],
+		# 	[1,0,1,1,0,0,1,1,0,1,1,1,0,1,1],
+		# 	[1,1,1,1,1,1,1,1,1,1,1,1,0,1,1]
+		# 	]
+		pass
 
 	# return object's name at the position
 	# or retrun empty string
@@ -236,10 +241,10 @@ class Maze:
 		# create graphics elements
 		pygame.display.init()
 
-		# Surafce de travail
+		# Display surface 
 		cls.display_surf = pygame.display.set_mode((cls.windowWidth,cls.windowHeight))
 		
-		# Surface Background de sauvegarde, pour les restaurations
+		# Background Surface de sauvegarde, pour les restaurations
 		# après mouvement du player
 		cls.background_display_surf = pygame.Surface((cls.windowWidth,cls.windowHeight))
 
@@ -248,6 +253,24 @@ class Maze:
 		# fill Maze surface with right graphic elements
 		for li in range(len(cls.maze)):
 			for col in range(len(cls.maze[li])):
+				
+				#Automatic detection of START/END of maze...
+				if cls.maze[li][col] == 'S':
+					cls.maze_start_point = [col,li]
+					cls.player_position = cls.maze_start_point
+					cls.background_display_surf.blit(cls.image_pavement, (col * 20, li * 20),  position_floor )
+					# print("Player Position :", end="") # DEBUG
+					# print(cls.maze_start_point) # DEBUG
+					continue
+
+				if cls.maze[li][col] == 'E':
+					cls.maze_end_point = [col,li]
+					cls.guardian_position = cls.maze_end_point
+					cls.background_display_surf.blit(cls.image_pavement, (col * 20, li * 20),  position_floor )
+					# print("Guardian Position :", end="") # DEBUG
+					# print(cls.maze_end_point) # DEBUG
+					continue		
+
 				if cls.maze[li][col] :
 					# Wall
 					cls.background_display_surf.blit(cls.image_pavement, (col * 20, li * 20),  position_wall )
@@ -306,20 +329,22 @@ class Maze:
 
 	# return TRUE if the position is not Wall
 	def isXYPositionPossible(cls, x, y ):
-		# use of NOT as a wall is "1" and "floor" is "0"...the opisite 
+		# use of NOT as a wall is "1" and "floor" is "0"...the oposite 
 		# af the question ...
 
 		if ( x < 0 or y < 0 ) :
 			return False
 
-		if ( x >= len( Maze.maze[0] ) or y >= len(Maze.maze) ) :
+		if ( x >= len( cls.maze[0] ) or y >= len(cls.maze) ) :
 			return False
 
-		if ( cls.pd_maze.iloc[ y , x ] == 0 ):
-			return True
+		# if ( cls.pd_maze.iloc[ y , x ] == 0 ):
+		# 	return True
 
 		if ( cls.pd_maze.iloc[ y , x ] == 1 ):
 			return False
+		else :
+			return True
 
 
 	# return TRUE if the guardian is at the position
@@ -332,16 +357,12 @@ class Maze:
 	# return TRUE if Player win against Guardian
 	def isPlayerWinOverGuardian(cls,XY):	
 
-		print( cls.player.getObjectNumber(), end=" ")
-		print( cls.number_of_initial_objects_list) 
-
 		if cls.isXYPositionIsGuardian(XY):
+
 			if ( cls.player.getObjectNumber() ==  cls.number_of_initial_objects_list ) :
-				print("MacGyver gagne") # DEBUG
 				return True
 			else:
 				cls.player.killMacGyver()
-				print("Mort de MacGyver") # DEBUG
 				return False
 
 	# Moves Player in the Maze
@@ -389,11 +410,24 @@ class Maze:
 		pygame.display.update( rect )
 
 
+def read_values_from_json(file, key):
+	values = []
+	with open(file) as f:
+		data = json.load(f)
+		for entry in data:
+			values.append(entry[key])
+
+	print(values) # DEBUG
+	
+	return values
+
 def main():
+
+
 
 	app = App()
 	app.on_execute()
-
+	pass
 
 
 if __name__ == "__main__":
