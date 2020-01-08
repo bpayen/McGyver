@@ -15,15 +15,42 @@ class App:
 
 	def __init__(self):
 
+
+		# create graphics elements
+		# Move... later....
+		pygame.display.init()
+
 		self._running = True
+
+		# TRUE -> the game is actif and player may ... play
+		self.contextGame = False
+
+		self.initialisation()
+
+		#Self.maze.displayJeu()
+
+		self.displayControlScreen("start")
+
+
+	def initialisation(self):
 
 		self.MacGyver = MacGyver('ressources/MacGyver.png')
 
+		self.MacGyver.initialisation()
+
 		self.guardian = Guardian('ressources/Gardien.png')
 
-		self.maze = Maze(self.MacGyver, self.guardian)
+		# self.EcranBase = MacGyver('ressources/EcranBase.png')
 
-		self.maze.display()
+		# self.EcranGagne = MacGyver('ressources/EcranGagne.png')
+
+		# self.EcranPerdu = MacGyver('ressources/EcranPerdu.png')
+
+		self.maze = Maze(self.MacGyver, self.guardian, self)
+
+		self.maze.initialisation()
+
+
 
 
 	def  on_execute(self):
@@ -34,21 +61,77 @@ class App:
 			keys = pygame.key.get_pressed()
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-					#print("DDDDD") # DEBUG
 					self._running = False
 					pygame.quit()
 
-				if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
-					self.maze.movePlayerDirection("UP")
+				if self.contextGame:
+					# Maze is displayed....we are in playing context.... Hero can move into the maze
 
-				if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-					self.maze.movePlayerDirection("DOWN")
+					if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
+						self.maze.movePlayerDirection("UP")
 
-				if event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-					self.maze.movePlayerDirection("LEFT")
+					if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
+						self.maze.movePlayerDirection("DOWN")
 
-				if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-					self.maze.movePlayerDirection("RIGHT")
+					if event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
+						self.maze.movePlayerDirection("LEFT")
+
+					if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
+						self.maze.movePlayerDirection("RIGHT")
+				else:
+					# Control screen is displayed .... 
+
+					if event.type == pygame.KEYDOWN and event.key == pygame.K_n:
+						self.contextGame = True
+						self.maze.displayJeu()
+
+					if event.type == pygame.KEYDOWN and event.key == pygame.K_f:
+						# End the game, close the screen...
+						self._running = False
+						pygame.quit()
+
+
+
+
+	# Display the start screen 
+	def displayControlScreen(cls, context):
+
+		cls.windowWidth = 300
+		cls.windowHeight = 300
+
+		# Display surface 
+		cls.start_display_surf = pygame.display.set_mode((cls.windowWidth,cls.windowHeight))
+
+		# we select the right picture depending on the program context
+		if context == "start":
+			# at the begenning of the game
+			cls.image_base = pygame.image.load('ressources/StartScreen.png').convert()
+
+		elif context == "win":
+			# McGyver defeated the guardian 
+			cls.image_base = pygame.image.load('ressources/WinScreen.png').convert()
+
+			# guardian defeated McGyver
+		elif context == "lose":
+			cls.image_base = pygame.image.load('ressources/LoseScreen.png').convert()
+
+		# if context == "start"
+		# 	cls.image_base = pygame.image.load('ressources/EcranBase.png').convert()
+
+		cls.start_display_surf.blit(cls.image_base, (0,0))
+		
+		pygame.display.update()
+
+
+	# set program context (GAMING or CONTROL)
+	def setProgramContext(self, context):
+	
+		if context == "GAMING" :
+			self.contextGame = True
+		else:
+			self.contextGame = False
+
+
 
 class Personnage:
 
@@ -73,16 +156,20 @@ class MacGyver(Personnage):
 
 	def __init__(cls, photoPath):
 		super().__init__( photoPath )
+		cls.initialisation()
 
 	def addObjectToList(cls, objectName):
 		if (  objectName is not None and objectName != "") :
 			cls.objectList.append(objectName)
 
-	def getObjectNumber(self):
-		return len(self.objectList)
+	def getObjectNumber(cls):
+		return len(cls.objectList)
+
+	def initialisation(cls):
+		cls.objectList = []
 
 	def killMacGyver(cls):
-		alive = False
+		cls.alive = False
 
 
 class Guardian(Personnage):
@@ -138,7 +225,8 @@ class Maze:
 	number_of_initial_objects_list = 0
 
 	# List of object's names
-	available_objects_list = ["Seringue", "tuyau","aiguille", "ether"] 
+	#available_objects_list = ["seringue", "tuyau", "aiguille", "ether"] 
+	available_objects_list = [] 
 
 	# player .... him-self
 	player = None
@@ -162,7 +250,7 @@ class Maze:
 	background_display_surf = None
 
 
-	def __init__(self, player, guardian ):
+	def __init__(self, player, guardian, application ):
 
 		# Construct Pandas structure (easier to use with cartesian coordinates...)
 		self.pd_maze = pd.DataFrame(self.maze)
@@ -175,7 +263,11 @@ class Maze:
 		self.guardian = guardian
 		#self.guardian_position = self.maze_end_point
 
-		self.number_of_initial_objects_list = len ( self.available_objects_list )
+		#self.number_of_initial_objects_list = len ( self.available_objects_list )
+
+		self.application = application
+
+		#self.initialisation()
 
 		#print(self.guardian_position) # DEBUG
 
@@ -189,7 +281,14 @@ class Maze:
 		# Initialize Maze
 
 		# Display Maze on screen
+
+	# Initialisation of variables that
+	# needs to be set at every new game starting.
+	def initialisation(self):
+		self.available_objects_list = ["seringue", "tuyau", "aiguille", "ether"] 
+		self.number_of_initial_objects_list = len ( self.available_objects_list )
 	
+
 	# Load Maze structure definition file
 	def loadMazeScheme(self):
 		 
@@ -228,7 +327,7 @@ class Maze:
 			return ""
 
 	# Display the Maze and the objects...
-	def display(cls):
+	def displayJeu(cls):
 
 		# coordonate of wall element in graphic file
 		position_wall = ( (12 * 20, 0 ) , (20 , 20) )
@@ -239,7 +338,7 @@ class Maze:
 		iol = []
 
 		# create graphics elements
-		pygame.display.init()
+		#pygame.display.init()
 
 		# Display surface 
 		cls.display_surf = pygame.display.set_mode((cls.windowWidth,cls.windowHeight))
@@ -259,16 +358,12 @@ class Maze:
 					cls.maze_start_point = [col,li]
 					cls.player_position = cls.maze_start_point
 					cls.background_display_surf.blit(cls.image_pavement, (col * 20, li * 20),  position_floor )
-					# print("Player Position :", end="") # DEBUG
-					# print(cls.maze_start_point) # DEBUG
 					continue
 
 				if cls.maze[li][col] == 'E':
 					cls.maze_end_point = [col,li]
 					cls.guardian_position = cls.maze_end_point
 					cls.background_display_surf.blit(cls.image_pavement, (col * 20, li * 20),  position_floor )
-					# print("Guardian Position :", end="") # DEBUG
-					# print(cls.maze_end_point) # DEBUG
 					continue		
 
 				if cls.maze[li][col] :
@@ -305,7 +400,7 @@ class Maze:
 		iol.append(pygame.transform.scale(pygame.image.load('ressources/tube_plastique.png').convert_alpha(), (20,20)))
 
 		for x in range(0,4):
-			cls.display_surf.blit(iol[x], (cls.objects_positions[x][0] * 20 , cls.objects_positions[x][1] * 20  ) )
+			cls.display_surf.blit(iol[x], ( cls.objects_positions[x][0] * 20 , cls.objects_positions[x][1] * 20  ) )
 
 		# Display McGyver in le Lab, with right size image
 		cls.player_photo_path = cls.player.getPhotoPath()
@@ -355,15 +450,17 @@ class Maze:
 			return False
 
 	# return TRUE if Player win against Guardian
-	def isPlayerWinOverGuardian(cls,XY):	
+	#def isPlayerWinOverGuardian(cls,XY):	
+	def isPlayerWinOverGuardian(cls):
 
-		if cls.isXYPositionIsGuardian(XY):
+		#if cls.isXYPositionIsGuardian(XY):
+		if ( cls.player.getObjectNumber() ==  cls.number_of_initial_objects_list ) :
+			return True
+		else:
+			cls.player.killMacGyver()
+			return False
 
-			if ( cls.player.getObjectNumber() ==  cls.number_of_initial_objects_list ) :
-				return True
-			else:
-				cls.player.killMacGyver()
-				return False
+
 
 	# Moves Player in the Maze
 	def movePlayerDirection(cls, direction):
@@ -372,33 +469,58 @@ class Maze:
 			if cls.isXYPositionPossible( cls.player_position[0], cls.player_position[1] - 1 ) :
 				cls.restoreBackground( cls.player_position )
 				cls.player_position = [ cls.player_position[0], cls.player_position[1] - 1 ]
-				cls.isPlayerWinOverGuardian(cls.player_position)
 				cls.player.addObjectToList( cls.getObjectAt( cls.player_position ) )
 				cls.displayPlayer( cls.player_position )
+				if cls.isXYPositionIsGuardian(cls.player_position):
+					cls.application.setProgramContext("CONTROL")					
+					if cls.isPlayerWinOverGuardian():
+						cls.application.displayControlScreen("win")
+					else:
+						cls.application.displayControlScreen("lose")
+					cls.application.initialisation()
+
 
 		if direction == "DOWN" :
 			if cls.isXYPositionPossible( cls.player_position[0], cls.player_position[1] + 1 ) :
 				cls.restoreBackground( cls.player_position )
 				cls.player_position = [ cls.player_position[0], cls.player_position[1] + 1 ]
-				cls.isPlayerWinOverGuardian(cls.player_position)
 				cls.player.addObjectToList( cls.getObjectAt( cls.player_position ) )
 				cls.displayPlayer( cls.player_position )
+				if cls.isXYPositionIsGuardian(cls.player_position):
+					cls.application.setProgramContext("CONTROL")
+					if cls.isPlayerWinOverGuardian():
+						cls.application.displayControlScreen("win")
+					else:
+						cls.application.displayControlScreen("lose")
+					cls.application.initialisation()
 
 		if direction == "RIGHT" :
 			if cls.isXYPositionPossible( cls.player_position[0] + 1, cls.player_position[1] ) :
 				cls.restoreBackground( cls.player_position )
 				cls.player_position = [ cls.player_position[0] + 1, cls.player_position[1] ]
-				cls.isPlayerWinOverGuardian(cls.player_position)
 				cls.player.addObjectToList( cls.getObjectAt( cls.player_position ) )
 				cls.displayPlayer( cls.player_position )
+				if cls.isXYPositionIsGuardian(cls.player_position):
+					cls.application.setProgramContext("CONTROL")
+					if cls.isPlayerWinOverGuardian():
+						cls.application.displayControlScreen("win")
+					else:
+						cls.application.displayControlScreen("lose")
+					cls.application.initialisation()
 
 		if direction == "LEFT" :
 			if cls.isXYPositionPossible( cls.player_position[0] - 1, cls.player_position[1] ) :
 				cls.restoreBackground( cls.player_position )
 				cls.player_position = [ cls.player_position[0] - 1, cls.player_position[1] ]
-				cls.isPlayerWinOverGuardian(cls.player_position)
 				cls.player.addObjectToList( cls.getObjectAt( cls.player_position ) )
 				cls.displayPlayer( cls.player_position )
+				if cls.isXYPositionIsGuardian(cls.player_position):
+					cls.application.setProgramContext("CONTROL")
+					if cls.isPlayerWinOverGuardian():
+						cls.application.displayControlScreen("win")
+					else:
+						cls.application.displayControlScreen("lose")
+					cls.application.initialisation()
 
 	# Display the player at the right place on the Maze....
 	def displayPlayer(cls, coordinates, sizeX = 20, sizeY = 20 ):
@@ -427,7 +549,6 @@ def main():
 
 	app = App()
 	app.on_execute()
-	pass
 
 
 if __name__ == "__main__":
