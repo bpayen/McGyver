@@ -45,7 +45,7 @@ Once started the application displays a screen asking what you want to do.
 Choose to start a new game by hitting the "N" key.
 
 Then a maze will apprears on the screen.
-You can move MacGyver in the maze with the four direction keys UP/DOWN/RIGHT/LEFT.
+You can move MacGyver in the maze with the four direction keys UP/DOWN/RIGHT/LEFT (or ESC to quitt).
 You have to grab the three objects laying onto the maze's ground before going in face of the guardian.
 Then you can move on the guardian box to fight against him, and WIN !
 be careful : if you face the guardian without having grabed all the objects he will kill you .... and you LOOSE the game
@@ -59,7 +59,7 @@ The size of the maze is fix.
 Use "0" to place a "path" on the maze's ground, and "1" to put a wall.
 You specifie the maze entry with a "S" letter, and the exit point with a "E" letter.
 Be carful : each part of the maze path must be reachable from the start point. If not : some objects could be put by the application in points where MacGyver can't go, so he would be impossible for him to grab every objects needed to win against the guardian....
-
+Be sure to draw a free path that allow MacGyver to reach the exit point !
 
 Layout example : 
 { "maze" : [
@@ -88,7 +88,7 @@ Layout example :
 
 ## License
 
-You can freely use and modify this programm.... 
+You can freely use and modify this program.... 
 
 ## Acknowledgments
 
