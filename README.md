@@ -15,7 +15,7 @@ It's best to use virtual environment which into you can install modules necessar
 Create repository on your machine, and go into it :
 
 ```
-$ md MacGyver
+$ mkdir MacGyver
 $ cd MacGyver
 ```
 
