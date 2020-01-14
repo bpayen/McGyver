@@ -56,9 +56,7 @@ A screen will inform you if you WIN or LOOSE the game... From this screen you ca
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+* **Bertrand PAYEN**.
 
 ## License
 
@@ -66,6 +64,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+* Olivier, my Mentor from OpenclassRooms :)
