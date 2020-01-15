@@ -12,7 +12,7 @@ class Maze:
 
 	# Window size 
 	windowWidth = 15 * 20 
-	windowHeight = 15 * 20
+	windowHeight = ( 15 * 20 ) + 20 # One line for objects grabed
 
 	# Maze scheme
 	maze = None
@@ -53,6 +53,9 @@ class Maze:
 	# List of object's names
 	available_objects_list = [] 
 
+	# list of grabed object
+	grabed_objects_list = []
+
 	# player .... him-self
 	player = None
 
@@ -74,6 +77,19 @@ class Maze:
 	# Maze Backgroung, to restore picture part after player move
 	background_display_surf = None
 
+	# Object's pictures
+	aiguille_picture = None
+	ether_picture = None
+	tube_plast_picture = None
+	seringue_picture = None
+
+	# object's names
+	TUYAU = "tuyau"
+	AIGUILLE = "aiguille"
+	ETHER = "ether"
+
+	bottom_line_rect = ( ( 0 , 15 * 20 ) , ( 15 * 20, 20 ) ) 
+
 
 	def __init__(self, player, guardian, application ):
 
@@ -94,12 +110,16 @@ class Maze:
 	# Initialisation of variables that
 	# needs to be set at every new game starting.
 	def initialisation(self):
-		self.available_objects_list = ["seringue", "tuyau", "aiguille", "ether"] 
+		# Picture's name order in the object list is importante for picture of
+		# grabed objects at bottom line screen 
+		self.available_objects_list =  [self.AIGUILLE, self.ETHER, self.TUYAU] 
 		self.number_of_initial_objects_list = len ( self.available_objects_list )
+		self.grabed_objects_list = []
 
 	# return object's name at the position
 	# or retrun empty string
 	def getObjectAt(cls, x_y): 
+
 		try:
 			index = cls.objects_positions.index( x_y ) 
 			# OK.... there is an object at position....
@@ -108,9 +128,35 @@ class Maze:
 			cls.objects_positions.remove( x_y ) 
 			object_to_return = cls.available_objects_list[index]
 			del cls.available_objects_list[index]
+			cls.displayGrabedObjects(object_to_return)
 			return object_to_return
 		except ValueError:
 			return ""
+
+	'''
+	Display grabed objects in the bottom line.
+	'''
+	def displayGrabedObjects(self, object_name):
+		# inc object grabed list
+		self.grabed_objects_list.append(object_name)
+		actual_number_of_objects = len ( self.grabed_objects_list )
+		#rect = ( ( 0 , 15 * 20 ) , ( 15 * 20, 20 ) ) 
+		if ( self.number_of_initial_objects_list == actual_number_of_objects ):
+			# all objects have been grabed 
+			self.display_surf.fill( (0,128,0), self.bottom_line_rect )
+			self.display_surf.blit(self.seringue_picture,  (0, 15 * 20 ))
+		else:
+			# New object grabed.... display it at bottom line
+			if actual_number_of_objects == 1 :
+				self.display_surf.fill( (255,69,0), self.bottom_line_rect )
+
+			if object_name == self.ETHER :
+				self.display_surf.blit( self.ether_picture,  ( (actual_number_of_objects - 1) * 20, 15 * 20 ) )
+			elif object_name == self.TUYAU :
+				self.display_surf.blit( self.tube_plast_picture,  ( (actual_number_of_objects - 1) * 20, 15 * 20 ) )
+			elif object_name == self.AIGUILLE :
+				self.display_surf.blit( self.aiguille_picture,  ( (actual_number_of_objects - 1) * 20, 15 * 20 ) )
+		pygame.display.update()
 
 	# Display the Maze and the objects...
 	def displayJeu(cls):
@@ -165,6 +211,8 @@ class Maze:
 		
 		cls.display_surf.blit(cls.background_display_surf, (0,0))
 
+		cls.display_surf.fill((139,0,0), cls.bottom_line_rect )
+
 		# get randoms objects list
 		try:
 			cls.free_case.remove( cls.maze_start_point ) # No object on Maze's starting point 
@@ -180,12 +228,16 @@ class Maze:
 		cls.objects_positions = random.sample(cls.free_case, k=len(cls.available_objects_list))
 
 		# display objects on the screen...
-		iol.append(pygame.transform.scale(pygame.image.load('ressources/aiguille.png').convert(), (20,20)))
-		iol.append(pygame.transform.scale(pygame.image.load('ressources/ether.png').convert_alpha(), (20,20)))
-		iol.append(pygame.transform.scale(pygame.image.load('ressources/seringue.png').convert_alpha(), (20,20)))
-		iol.append(pygame.transform.scale(pygame.image.load('ressources/tube_plastique.png').convert_alpha(), (20,20)))
+		cls.aiguille_picture = pygame.transform.scale(pygame.image.load('ressources/aiguille.png').convert(), (20,20))
+		cls.ether_picture = pygame.transform.scale(pygame.image.load('ressources/ether.png').convert_alpha(), (20,20))
+		cls.tube_plast_picture = pygame.transform.scale(pygame.image.load('ressources/tube_plastique.png').convert_alpha(), (20,20))
+		cls.seringue_picture = pygame.transform.scale(pygame.image.load('ressources/seringue.png').convert_alpha(), (20,20))
 
-		for x in range(0,4):
+		iol.append( cls.aiguille_picture )
+		iol.append( cls.ether_picture )
+		iol.append( cls.tube_plast_picture )
+
+		for x in range(0,3):
 			cls.display_surf.blit(iol[x], ( cls.objects_positions[x][0] * 20 , cls.objects_positions[x][1] * 20  ) )
 
 		# Display McGyver in le Lab, with right size image
