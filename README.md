@@ -4,8 +4,8 @@ This projet displays a maze in wich MacGyver have to escape after grabing three 
 
 ## Langages and modules
 
-Python 3
-PyGame
++ Python 3
++ PyGame
 
 ## Getting Started
 
