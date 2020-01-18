@@ -2,6 +2,11 @@
 
 This projet displays a maze in wich MacGyver have to escape after grabing three objects on the ground, elaborates syring and made asleep the maze's guardian.
 
+## Langages and modules
+
+Python 3
+PyGame
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for playing.
@@ -85,6 +90,10 @@ Layout example :
 ## Authors
 
 * **Bertrand PAYEN**.
+
+# Why this project ?
+
+This project was carried out during the Python Application Developer course at Openclassrooms, as a student. It has no other purpose than to highlight the use of PyGame.
 
 ## License
 
