@@ -91,7 +91,7 @@ Layout example :
 
 * **Bertrand PAYEN**.
 
-# Why this project ?
+## Why this project ?
 
 This project was carried out during the Python Application Developer course at Openclassrooms, as a student. It has no other purpose than to highlight the use of PyGame.
 
